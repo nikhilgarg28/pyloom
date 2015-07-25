@@ -2,8 +2,9 @@
 Python Bloom Filter
 
 Usage:
+------
 
-```
+```python
 import pyloom
 
 # create bloom filter which can store 1000 keys
@@ -24,3 +25,10 @@ bloom.add('world')
 
 'random' in bloom
 => False
+
+
+Depends On:
+-----------
+    mmh3     (https://pypi.python.org/pypi/mmh3)
+    bitarray (https://pypi.python.org/pypi/bitarray/)
+
