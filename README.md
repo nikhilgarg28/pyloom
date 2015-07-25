@@ -25,6 +25,7 @@ bloom.add('world')
 
 'random' in bloom
 => False
+```
 
 
 Depends On:
