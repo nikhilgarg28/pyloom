@@ -12,6 +12,7 @@ Requires:
 from bitarray import bitarray
 import math
 import mmh3
+import time
 
 
 LOG2 = math.log(2)
@@ -27,6 +28,12 @@ class BloomFilter(object):
         self.error = error
         self._count = 0
         self._setup()
+        self._mem_time = 0
+        self._mem_access = 0
+        self._hash_time = 0
+        self._hash_access = 0
+        self._hash_init_count = 0
+        self._hash_init_time = 0
 
     def _setup(self):
         num_bits = int(-self.capacity * math.log(self.error) / (LOG2 * LOG2))
@@ -39,13 +46,22 @@ class BloomFilter(object):
     def add(self, key):
         if key not in self:
             for b in self._get_hashes(key):
+                start = time.clock()
                 self._bitarray[b] = True
+                self._mem_time += time.clock() - start
+                self._mem_access += 1
 
             self._count += 1
 
     def __contains__(self, key):
         for b in self._get_hashes(key):
-            if self._bitarray[b] is False:
+
+            start = time.clock()
+            found = self._bitarray[b]
+            self._mem_time += time.clock() - start
+            self._mem_access += 1
+
+            if found is False:
                 return False
 
         return True
@@ -54,6 +70,7 @@ class BloomFilter(object):
         return self._count
 
     def _get_hashes(self, key):
+        start = time.clock()
         h1 = murmur(key, seed=0)
         h2 = murmur(key, h1)
 
@@ -64,10 +81,17 @@ class BloomFilter(object):
         h1 = h1 % bph;
         h2 = h2 % bph
 
+        self._hash_init_time += time.clock() - start
+        self._hash_init_count += 1
+        start = time.clock()
+
         sum_h = h1
         base = 0
         for i in range(self._num_hashes):
+            self._hash_time += time.clock() - start
+            self._hash_access += 1
             yield base + sum_h
+            start = time.clock()
 
             base += bph
             sum_h += h2
