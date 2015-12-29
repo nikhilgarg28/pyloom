@@ -70,3 +70,34 @@ class BloomFilter(object):
             sum_h2 += h2
             if sum_h2 >= self._num_bits:
                 sum_h2 -= self._num_bits
+class ScalableBloomFilter(object):
+    def __init__(self, capacity, error=0.001, expansion_rate=2):
+        self.capacity = capacity
+        self.error = error
+        self.expansion_rate = expansion_rate
+        self._error_r = 0.9
+        self._bfs = [BloomFilter(capacity, error * (1 - self._error_r))]
+
+    def __len__(self):
+        return sum(len(bf) for bf in self._bfs)
+
+    def _memory(self):
+        return sum(len(bf._bitarray) for bf in self._bfs)
+
+    def add(self, key):
+        if key not in self:
+            last = self._bfs[-1]
+            if len(last) >= last.capacity:
+                new_capacity = self.expansion_rate * last.capacity
+                new_error = self._error_r * last.error
+                last = BloomFilter(new_capacity, new_error)
+                self._bfs.append(last)
+
+            last.add(key)
+
+    def __contains__(self, key):
+        for bf in reversed(self._bfs):
+            if key in bf:
+                return True
+
+        return False

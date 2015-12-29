@@ -1,5 +1,4 @@
-import pyloom
-BloomFilter = pyloom.BloomFilter
+from pyloom import *
 
 import random
 import string
@@ -38,6 +37,18 @@ class TestBloomFilter(object):
         for k in keys1:
             bf.add(k)
             assert k in bf
+class TestScalableBloomFilter(object):
+    def test_scaling(self):
+        S, N, E = 1000, 10000, 0.01
+
+        # create a bloom filter with initial capacity of S
+        sbf = ScalableBloomFilter(S, E, 2)
+        keys1 =  {random_string(10) for _ in range(N)}
+        keys2 =  {random_string(10) for _ in range(N)}
+
+        for k in keys1:
+            sbf.add(k)
+            assert k in sbf
 
         error = 0
         total = 0
@@ -46,8 +57,8 @@ class TestBloomFilter(object):
                 continue
 
             total += 1
-            if k in bf:
+            if k in sbf:
                 error += 1
 
         error_rate = error / total
-        assert error_rate <= 2 * 0.01
+        assert error_rate <= 2 * 0.01, 'Error rate is %.3f when it should be %.3f' % (error_rate, E)
