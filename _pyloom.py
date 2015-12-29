@@ -29,8 +29,10 @@ class BloomFilter(object):
         self._setup()
 
     def _setup(self):
-        self._num_bits = int(-self.capacity * math.log(self.error) / (LOG2 * LOG2))
-        self._num_hashes = int(LOG2 * (self._num_bits / self.capacity) + 0.5)
+        num_bits = int(-self.capacity * math.log(self.error) / (LOG2 * LOG2))
+        self._num_hashes = int(LOG2 * (num_bits / self.capacity) + 0.5)
+        self._bits_per_hash = int(num_bits / self._num_hashes + 0.5)
+        self._num_bits = self._bits_per_hash * self._num_hashes
         self._bitarray = bitarray(self._num_bits)
         self._bitarray.setall(False)
 
@@ -55,21 +57,24 @@ class BloomFilter(object):
         h1 = murmur(key, seed=0)
         h2 = murmur(key, h1)
 
+        bph = self._bits_per_hash
+
         # doing a modulo now instead of earlier so that h2 could be seeded on a
         # larger space
-        h1 = h1 % self._num_bits;
-        h2 = h2 % self._num_bits;
+        h1 = h1 % bph;
+        h2 = h2 % bph
 
-        sum_h2 = 0
+        sum_h = h1
+        base = 0
         for i in range(self._num_hashes):
-            h = h1 + sum_h2
-            if h >= self._num_bits:
-                h -= self._num_bits
+            yield base + sum_h
 
-            yield h
-            sum_h2 += h2
-            if sum_h2 >= self._num_bits:
-                sum_h2 -= self._num_bits
+            base += bph
+            sum_h += h2
+            if sum_h >= bph:
+                sum_h -= bph
+
+
 class ScalableBloomFilter(object):
     def __init__(self, capacity, error=0.001, expansion_rate=2):
         self.capacity = capacity

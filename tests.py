@@ -14,8 +14,8 @@ class TestBloomFilter(object):
     def test_setup(self):
         bf = BloomFilter(1000)
         assert 10 == bf._num_hashes
-        assert 14377 == bf._num_bits
-        assert 14377 == len(bf._bitarray)
+        assert 14380 == bf._num_bits
+        assert 14380 == len(bf._bitarray)
 
         # and initially all bits are False
         assert 0 == bf._bitarray.count()
@@ -23,8 +23,8 @@ class TestBloomFilter(object):
         # test again with a different false positive rate
         bf = BloomFilter(1000, error=0.01)
         assert 7 == bf._num_hashes
-        assert 9585 == bf._num_bits
-        assert 9585 == len(bf._bitarray)
+        assert 9583 == bf._num_bits
+        assert 9583 == len(bf._bitarray)
 
         # and initially all bits are False
         assert 0 == bf._bitarray.count()
